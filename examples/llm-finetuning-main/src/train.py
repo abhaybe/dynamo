@@ -20,26 +20,71 @@ SINGLE_GPU_CONFIG = os.environ.get("GPU_CONFIG", "a10g:1")
 
 @app.function(
     image=axolotl_image,
-    gpu=GPU_CONFIG,
+    gpu=SINGLE_GPU_CONFIG,
     volumes=VOLUME_CONFIG,
     timeout=24 * HOURS,
 )
 def train(run_folder: str, output_dir: str):
     import torch
+    import wandb
+    import yaml
+
+    # Initialize wandb if allowed
+    ALLOW_WANDB = os.environ.get("ALLOW_WANDB", "false").lower() == "true"
+    if ALLOW_WANDB:
+        with open(f"{run_folder}/config.yml", "r") as f:
+            config = yaml.safe_load(f)
+        wandb.init(
+            project=config.get("wandb_project", "default-project"),
+            name=config.get("wandb_run_name", "default-run"),
+            config=config,  # Log config as wandb settings
+        )
 
     print(f"Starting training run in {run_folder}.")
     print(f"Using {torch.cuda.device_count()} {torch.cuda.get_device_name()} GPU(s).")
 
-    ALLOW_WANDB = os.environ.get("ALLOW_WANDB", "false").lower() == "true"
+    # Training command
     cmd = f"accelerate launch -m axolotl.cli.train ./config.yml {'--wandb_mode disabled' if not ALLOW_WANDB else ''}"
-    run_cmd(cmd, run_folder)
+    
+    # Log metrics during training
+    def run_cmd_with_logging(cmd, run_folder):
+        import subprocess
+        import re
 
-    # Kick off CPU job to merge the LoRA weights into base model.
+        VOLUME_CONFIG["/runs"].reload()
+
+        # Execute the command and stream logs
+        process = subprocess.Popen(cmd.split(), cwd=run_folder, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        for line in process.stdout:
+            decoded_line = line.decode("utf-8").strip()
+            print(decoded_line)
+
+            # Log metrics if wandb is enabled
+            if ALLOW_WANDB:
+                match = re.search(r"loss: ([\d\.]+), epoch: (\d+)", decoded_line)
+                if match:
+                    loss = float(match.group(1))
+                    epoch = int(match.group(2))
+                    wandb.log({"loss": loss, "epoch": epoch})
+        
+        process.wait()
+        if process.returncode != 0:
+            raise RuntimeError(f"Command failed with return code {process.returncode}")
+        VOLUME_CONFIG["/runs"].commit()
+
+    run_cmd_with_logging(cmd, run_folder)
+
+    # Finalize wandb logging
+    if ALLOW_WANDB:
+        wandb.finish()
+
+    # Kick off CPU job to merge the LoRA weights into base model
     merge_handle = merge.spawn(run_folder, output_dir)
     with open(f"{run_folder}/logs.txt", "a") as f:
         f.write(f"<br>merge: https://modal.com/logs/call/{merge_handle.object_id}\n")
         print(f"Beginning merge {merge_handle.object_id}.")
     return merge_handle
+
 
 
 @app.function(
