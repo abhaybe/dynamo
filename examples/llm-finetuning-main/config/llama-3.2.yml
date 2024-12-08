@@ -81,3 +81,7 @@ gradient_checkpointing: true
 
 strict: false
 local_rank:
+
+# wandb config
+wandb_project: dynamo
+wandb_watch: gradients
