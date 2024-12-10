@@ -33,7 +33,6 @@ axolotl_image = (
             AXOLOTL_NCCL_TIMEOUT="60",
         )
     )
-    .entrypoint([])
 )
 
 vllm_image = (

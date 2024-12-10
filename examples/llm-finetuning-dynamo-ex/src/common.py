@@ -3,6 +3,7 @@ from pathlib import PurePosixPath
 from typing import Union
 
 import modal
+from modal import Image
 
 APP_NAME = "example-axolotl"
 
@@ -15,7 +16,6 @@ AXOLOTL_REGISTRY_SHA = (
 )
 
 ALLOW_WANDB = os.environ.get("ALLOW_WANDB", "false").lower() == "true"
-
 axolotl_image = (
     modal.Image.from_registry(f"winglian/axolotl@sha256:{AXOLOTL_REGISTRY_SHA}")
     .pip_install(

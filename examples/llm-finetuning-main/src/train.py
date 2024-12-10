@@ -44,7 +44,7 @@ def train(run_folder: str, output_dir: str):
     print(f"Using {torch.cuda.device_count()} {torch.cuda.get_device_name()} GPU(s).")
 
     # Training command
-    cmd = f"accelerate launch -m axolotl.cli.train ./config.yml {'--wandb_mode disabled' if not ALLOW_WANDB else ''}"
+    cmd = f"accelerate launch -m axolotl.cli.train ./config.yml"
     
     # Log metrics during training
     def run_cmd_with_logging(cmd, run_folder):
