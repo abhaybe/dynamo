@@ -398,7 +398,8 @@
             <div class="main-content-block">
                 <h1 style="font-size: 32px">Analysis and Results</h1>
                 <hr style="border-top: 1px solid #cccccc" />
-                Results
+                First, we tested different reweighting policies with alpha values 0.1 and -0.1. The resulting loss curves were as follows:
+                <img src="./images/your_image_here.png" width="512px" />
             </div>
             <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
@@ -411,8 +412,84 @@
             <div class="main-content-block">
                 <h1 style="font-size: 32px">Conclusions and Limitations</h1>
                 <hr style="border-top: 1px solid #cccccc" />
-                Let's end with some discussion of the implications and
-                limitations.
+                <p>
+                    Although our method did not produce significant results on
+                    the model and datasets we experimented with, we have gained
+                    a much better understanding of the problem and suggest many
+                    promising future directions.
+                </p>
+                <p>
+                    Firstly, we chose to finetune on subsets of a specific
+                    domain rather than finetune on domains that were very
+                    different. For example, having domains of English vs. code
+                    vs. Spanish would prove to be very different problems for
+                    the model, and the model might learn a more effective set of
+                    weights -- it's possible that many of the math domains were
+                    too similar (e.g. math formatting, tone of the problem
+                    statement, etc.) With a larger and more diverse dataset, we
+                    might observe more meaningful results.
+                </p>
+                <p>
+                    Furthermore, we used a 1B parameter LLM because of
+                    computational constraints -- at this stage, the model is
+                    likely not good enough to learn the nuances between
+                    different data domains. We tested the output of the
+                    generated models, and this is what they often looked like:
+                </p>
+                <p>Question: Solve for x: 2x + 3 = 11</p>
+                <p>
+                    Generated Answer:
+                    $$$fracfracrightfracfracright$\$\$sqrt$$\$\\$\$$\$\$\$\$\$\$$$$\$\$$$\\$$\$\,3$right$\\left{${3$\{$\$$$$\right{right+{{right{{{2\{22+{1{2{22{2\{right3right\22}2end2$2{$right\$end$\right{end$\2{\+\3{{\3right\{\{\\{{\{{-\2right13right34{\{right$2{,\2right\1\\{0\{{{\end{2,2}{1right{$&\\11right\2{{&{end{end{}\2\\{end$end$endright22{\{end{\\
+                    \end\rightrightend02\2left32{\\endright\\\right{\{\\{\\end\\\4rightend\\right\\\\{2\\2\2end22\end2\rightright22{\2endend\\\22{\2end5\end2{1\{\\{\right2{2\\\{\\{2,2{\{4\15\{end\\\\\}\\\\5\{\&\{\3\\{\5&24\{\4{2\\{\3\0\&\\\1\\2\\\5\\{\\352\\\\3\\\\{\\\\6\\\\2\\2rightend5\{\\,26\\\2\5\\\\\4\2\2\\\5\\\2\5}2\\\\\2{{{&^\62\\{\end5002{12{&2\22222{5,end65\\\,52155{122562\
+                </p>
+                <p>
+                    From this, we can see that the model is only really learning
+                    what tokens are likely to occur in a formatted math problem
+                    – it’s predicting lots of numbers and formatting keywords
+                    instead of any coherent output. Because of its limited size,
+                    it only got a general idea of what math output is supposed
+                    to look like, and is not actually learning the underlying
+                    concepts. Under this lens, it makes sense that the different
+                    reweighting policies were all effectively equivalent – our
+                    small model was not able to understand the difference
+                    between different domains because it was still learning the
+                    higher-level structure of math-formatted text. If possible,
+                    we would run this using a much larger model with stronger
+                    baseline math capabilities – we suspect that once the model
+                    is able to glean more of the nuances in the data, the
+                    mixture reweighting will prove to be more effective.
+                </p>
+                <p>
+                    Our experiments also proved that the scale of the weight
+                    updates is also a crucial aspect of the reweighting policy –
+                    in our results, we clearly found that an alpha of 0.1 vs 1
+                    crossed some boundary that induced different behavior. With
+                    more compute available, we would do a more fine-grained
+                    search on alpha and find the most significant value(s)
+                    within this interval. Furthermore, this scale is likely
+                    specific to our task – in a different training/finetuning
+                    environment with a different loss scale and different
+                    domains, the exact value of alpha that is optimal for weight
+                    updates would likely be very different. One possible
+                    approach to finding this value would be to develop a proxy
+                    model that is able to adjust alpha as training evolves –
+                    this could be some simple meta-learning approach or as
+                    complicated as a mini neural network.
+                </p>
+                <p>
+                    Lastly, we operated in the realm of finetuning vs
+                    pretraining. It’s possible that with pretraining, mixture
+                    reweighting could look very different – the model might need
+                    to learn from more general knowledge before it is able to
+                    fully understand the information from a more specific domain
+                    (e.g. English before code).
+                </p>
+                <p>
+                    Overall, we’re optimistic about bringing this method to a
+                    larger scale of LLM development – there are many exciting
+                    research directions that could bring us closer to truly
+                    adaptive curriculum learning.
+                </p>
             </div>
             <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
