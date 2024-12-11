@@ -1,6 +1,20 @@
 <html>
     <head>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: {
+        fontCache: 'global'
+      }
+    };
+    </script>
 
         <link rel="shortcut icon" href="images/icon.ico" />
         <style type="text/css">
@@ -385,14 +399,68 @@
             <div class="main-content-block">
                 <h1 style="font-size: 32px">Methodology</h1>
                 <hr style="border-top: 1px solid #cccccc" />
-                Let's end with some discussion of the implications and
-                limitations.
+
+                <h2 style="font-size: 24px">The Setup: Dataset and Model</h1>
+
+                Optimizing data mixtures is an important issue for both
+                pre-training and fine-tuning, with possibly different results
+                given the difference in data quality in the two stages. However,
+                we choose to focus on fine-tuning for several reasons:
+                <ul>
+                    <li>
+                        Fine-tuning datasets are more customized, allowing us to
+                        focus on specific types of data.
+                    </li>
+                    <li>
+                        The subdomains of the dataset are typically already
+                        clearly delineated, which allows us to avoid large
+                        amounts of data preprocessing and analysis.
+                    </li>
+                    <li>
+                        Overall, finetuning is much more effective given our
+                        constraints in cost, compute, and time.
+                    </li>
+                </ul>
+
+                We use the <b>AMPS Dataset</b> <a href="#ref_6">[6]</a> –
+                specifically, we take a subset of all of the 6 domains in the
+                Mathematica training set (algebra, geometry, calculus, counting
+                and statistics, linear algebra, and number theory). We chose
+                this dataset because it provided distinct domains that would
+                require different skills/knowledge, but with some amount of
+                transfer between domains (e.g. proficiency in algebra may be
+                helpful in linear algebra). For our model, we use Meta’s LLama
+                3.2 1B<a href="#ref_7">[7]</a>. The small size of this model
+                makes it easy and effective to finetune cost-wise, while the
+                advanced training and finetuning done on this model ensures that
+                our model is a strong baseline while still having room for
+                improvement due to the limitations of its smaller size.
+
+                <h2 style="font-size: 24px">Methodology</h1>
+<p>
+Suppose our dataset contains $N$ domains, where each domain is represented by a dataset $D_i$. Our method introduces a new set of parameters into the training process – these are <em>domain weights</em> $w_1$ to $w_N$, used to select the specific domain whose dataset we sample a datapoint from (specifically, weight $w_i$ directly influences the chance that $D_i$ is selected).
+</p>
+
+<p>
+DynaMO adjusts these domain weights during the training process – specifically, every $T$ training steps (we fixed $T=50$ for all our experiments), we perform a dynamic update using a custom reweighting policy. This is done by observing the structure of the $N$ different loss curves for each domain. The specific policies that we tested are summarized below:
+</p>
+
+<ul>
+<li>Baseline policy – Uniform random sampling, where $w_i = 1$ (the reweighting policy is the identity function). In other words, the domain weights do not change.</li>
+<li>Delta policy- We use the change in loss to update weights. The reasoning is explored in the next section.</li>
+<li>Average policy – $L_{i, \text{avg}}$, the average of the previous 100 values of loss, is used to update weights. We explore this in more detail under Experiment 1.</li>
+</ul>
+
+<p>
+To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted the data loading process. Normally, domain weights would be used to subsample from a larger dataset and be passed in as a fixed dataset into the training process – because the nature of our method requires the sampling step to be done during training, we modify PyTorch's Dataset class as needed. The weights are stored internally to this class, and every time <strong>getitem</strong> is called on this custom Dataset class, a domain is sampled using these weights and a datapoint is sampled from that domain. This custom dataset also tracks losses across the domains – each domain maintains a length-100 sliding window that can be used to determine how the loss has evolved in the recent pass. Finally, each dataset instance also has its own <em>weight update policy</em> function, called every $T$ training steps, that describes how to update the domain weights based on the current weights and the loss windows for each domain.
+</p>
             </div>
             <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
                 intro section.
             </div>
         </div>
+
         <div class="content-margin-container" id="intro">
             <div class="margin-left-block"></div>
             <div class="main-content-block">
@@ -449,6 +517,17 @@
                     <a href="https://arxiv.org/abs/2307.14430"
                         >Skill-it! A Data-Driven Skills Framework for...</a
                     >, Chen et al., 2023<br /><br />
+
+                    <a id="ref_6"></a>[6]
+                    <a href="https://github.com/hendrycks/math"
+                        >Measuring Mathematical Problem Solving With the MATH
+                        Dataset</a
+                    >, Hendrycks et al., 2021<br /><br />
+
+                    <a id="ref_7"></a>[7] We used the
+                    <a href="https://huggingface.co/unsloth/Llama-3.2-1B"
+                        >Unslouth Huggingface Repo.</a
+                    ><br /><br />
                 </div>
             </div>
             <div class="margin-right-block">
