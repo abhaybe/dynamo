@@ -60,9 +60,9 @@ lora_fan_in_fan_out:
 #  - w2
 #  - w3
 
-wandb_project:
-wandb_entity:
-wandb_watch:
+wandb_project: dynamo
+wandb_entity: 
+wandb_watch: gradients
 wandb_name:
 wandb_log_model:
 

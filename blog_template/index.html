@@ -260,53 +260,37 @@
         <div class="content-margin-container" id="intro">
             <div class="margin-left-block"></div>
             <div class="main-content-block">
-                <h1>Introduction</h1>
-                Motivate your project. What question are you asking. Why is it
-                unanswered so far? What gap in the literature or practice are
-                you filling? Why is it important? <br />
-
-                Modern large language models (LLMs) have revolutionized natural
+                <h1 style="font-size: 32px">Introduction</h1>
+                <hr style="border-top: 1px solid #cccccc" />
+                Large language models (LLMs) have revolutionized natural
                 language processing by harnessing vast and diverse datasets
-                during training. These datasets span an array of domains and
-                subdomains — from programming languages like Python and Java to
-                specialized fields like legal documents, scientific literature,
-                and creative writing. However, this diversity introduces a
-                crucial challenge: determining the optimal composition of
-                training data. Simply training on all available data
-                indiscriminately can lead to inefficiencies, such as
-                overemphasizing certain tasks or domains at the expense of
-                others, and may fail to leverage the full potential of the
-                model.
+                during training. Modern LLMs are trained on trillions of tokens
+                of data over several stages. These datasets span an array of
+                domains and subdomains — from programming languages like Python
+                and Java to specialized fields like legal documents, scientific
+                literature, and creative writing. However, this diversity
+                introduces a crucial challenge:
+                <b>determining the optimal composition of training data.</b>
+                Simply training on all available data can lead to
+                inefficiencies, such as overemphasizing certain tasks or domains
+                at the expense of others, and may fail to leverage the full
+                potential of the model. For instance, one direct way this
+                heuristic is universally applied is by splitting training into
+                pre-training, with simpler and more diverse data, and
+                fine-tuning, with task-specific and high-quality data.
                 <br /><br />
-                This challenge is further compounded by insights from
+                This challenge of choosing data mixtures is further compounded
+                by insights from
                 <b>neural scaling laws</b> which emphasize that both model size
                 and dataset size must be scaled in tandem for optimal
-                performance. These findings underscore the importance of
-                deliberate, empirical strategies in curating training data
-                mixtures rather than relying on ad hoc methods. The question of
-                how to systematically identify and fine-tune the ideal blend of
-                training data is thus an open and pressing problem in the field.
-                <br /><br />
-                Historically, researchers have addressed this problem by
-                upsampling specific data domains based on heuristics. For
-                instance, the Llama 3.1 family of models employed a training
-                strategy that prioritized "high-quality" data in domains like
-                mathematics and reasoning. Their approach involved training
-                smaller models on several candidate data mixtures and
-                extrapolating performance metrics to select the most promising
-                mixture for the larger models. While effective to an extent,
-                such methods remain resource-intensive and inherently limited by
-                their reliance on static data compositions.
-                <br /><br />
-                Recent advancements have attempted to optimize this process
-                through more dynamic approaches. For example,
-                <b>DoReMi</b> proposes a framework that trains smaller reference
-                models to infer optimal data mixture weights, while
-                <b>Skill-it</b> leverages a "skills graph" to dynamically map
-                relationships between subsets of training data. These methods
-                highlight the potential for data mixtures to be treated as
-                learnable parameters rather than fixed inputs. <br /><br />
-                Building on these foundational efforts, our work introduces
+                performance. It is, therefore, important, to these findings
+                underscore the importance of deliberate, empirical strategies in
+                curating training data mixtures rather than relying on ad hoc
+                methods. The question of how to systematically identify and
+                fine-tune the ideal blend of training data is thus an open and
+                pressing problem in the field. <br /><br />
+
+                Our work introduces
                 <b>DynaMO (Dynamic Mixture Optimization)</b> — a framework that
                 dynamically adjusts data mixture weights during fine-tuning.
                 Unlike previous methods, which primarily focus on static or
@@ -316,10 +300,80 @@
                 training efficiency, uncover superior performance outcomes, and
                 potentially reveal new principles governing data mixture
                 optimization. <br /><br />
-                In the sections that follow, we explore the theory,
-                implementation, and results of DynaMO, demonstrating its
-                potential to redefine how we approach training data mixtures for
-                modern LLMs.
+            </div>
+            <div class="margin-right-block">
+                Margin note that clarifies some detail #main-content-block for
+                intro section.
+            </div>
+        </div>
+        <div class="content-margin-container" id="intro">
+            <div class="margin-left-block"></div>
+            <div class="main-content-block">
+                <h1 style="font-size: 32px">Background and Literature</h1>
+                <hr style="border-top: 1px solid #cccccc" />
+
+                The question of how to optimally mix different types of training
+                data has been a persistent challenge in machine learning.
+                Traditionally, researchers relied heavily on manual heuristics
+                and static mixing strategies. The Llama 3.1 team's
+                <a href="#ref_1">[1]</a> approach of prioritizing "high-quality"
+                data in specific domains like mathematics and reasoning
+                exemplifies this traditional methodology. However, this is very
+                trial and error based and may not give the best result. To solve
+                this, we draw inspiration from several rich areas of machine
+                learning:
+                <br />
+
+                <h3 style="font-size: 20px">
+                    1. Multi-armed Bandit (MAB) Theory
+                </h3>
+
+                Multi-armed bandit theory generally explores how to sample from
+                a dataset with only limited information about its distribution.
+                Classical MAB works <a href="#ref_2">[2]</a> provide frameworks
+                for optimizing decisions under uncertainty - perfectly
+                applicable to our dynamic mixing problem. Recent adaptations
+                like contextual bandits <a href="#ref_3">[3]</a> have made these
+                connections even more relevant.
+
+                <h3 style="font-size: 20px">2. Curriculum Learning</h3>
+                Our work shares deep connections with curriculum learning
+                principles (Bengio et al., 2009). The core assumptions are
+                similar:
+                <ul>
+                    <li>Tasks can be meaningfully ordered.</li>
+                    <li>Learning transfers from simpler to complex tasks.</li>
+                    <li>Training sequence impacts final performance.</li>
+                </ul>
+                <br /><br />
+
+                There have been other attempts at mixture optimization and
+                understanding data mixtures. Recent years have seen a surge in
+                more sophisticated approaches.
+                <b>DoReMi</b> <a href="#ref_4">[4]</a> introduced a particularly
+                elegant solution using reference models to dynamically infer
+                optimal mixture weights. The key insight was training smaller
+                proxy models on different mixture combinations, then using their
+                performance to predict optimal mixing strategies for larger
+                models. This effectively transformed mixture weights from fixed
+                hyperparameters into learnable parameters that could be
+                optimized through a meta-learning approach. However, this
+                approach needs predefined data mixtures and cannot be customized
+                for finetuning datasets, or for more fine-graind division. It
+                also assumes that data mixtures in small models generalize to
+                larger models and datasets.<br /><br />
+                Similarly, <b>Skill-it</b> <a href="#ref_5">[5]</a> approached
+                the problem through the lens of prerequisite relationships,
+                introducing a "skills graph" that maps dependencies between
+                different training objectives. By modeling how different
+                capabilities build upon each other, Skill-it can dynamically
+                adjust data mixture weights based on the model's current skill
+                proficiency and the natural progression of skill acquisition.
+                This graph-based approach provides an interpretable framework
+                for curriculum learning strategies. While powerful, this
+                approach requires careful manual design of the skills graph and
+                may not generalize well to domains where skill relationships are
+                less clear.<br /><br />
             </div>
             <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
@@ -327,79 +381,18 @@
             </div>
         </div>
 
-        <div class="content-margin-container" id="does_x_do_y">
+        <div class="content-margin-container" id="intro">
             <div class="margin-left-block"></div>
             <div class="main-content-block">
-                <h1>Does X do Y?</h1>
-                It is well known that Y does Y. And this has raised the question
-                does X do Y? Because if Y does Y then it stands to reason that X
-                does Y. But we cannot answer this until we realize the Z implies
-                Y and X can be linked to Z.<br /><br />
-
-                Now let's write some math!<br />
-                <center>
-                    <math xmlns="http://www.w3.org/1998/Math/MathML">
-                        <mrow>
-                            <mrow>
-                                <mo>&#x2202;</mo>
-                                <mi>y</mi>
-                            </mrow>
-                            <mo>/</mo>
-                            <mrow>
-                                <mo>&#x2202;</mo>
-                                <mi>x</mi>
-                            </mrow>
-                        </mrow>
-                        <mo>=</mo>
-                        <mi>x</mi>
-                    </math>
-                </center>
-                <br />
-                It's probably best to ask an LLM to help do the web formatting
-                for math. You can tell it "convert this latex equation into
-                MathML: $$\frac{\partial dy}{\partial dx} = x$$" But it took me
-                a few tries. So, if you get frustrated, you can embed an image
-                of the equation, or use other packages for rendering equations
-                on webpages.
-            </div>
-            <div
-                class="margin-right-block"
-                style="transform: translate(0%, -100%)"
-            >
-                <!-- you can move the margin notes up and down with translate -->
-                Interestingly, Plato also asked if X does Y, in
-                <a href="#ref_1">[1]</a>.
-            </div>
-        </div>
-
-        <div class="content-margin-container">
-            <div class="margin-left-block"></div>
-            <div class="main-content-block">
-                <h1>Another section</h1>
-                In this section we embed a video:
-                <video
-                    class="my-video"
-                    loop
-                    autoplay
-                    muted
-                    style="width: 725px"
-                >
-                    <source src="./images/mtsh.mp4" type="video/mp4" />
-                </video>
-            </div>
-            <div class="margin-right-block">
-                A caption for the video could go here.
-            </div>
-        </div>
-
-        <div class="content-margin-container" id="implications_and_limitations">
-            <div class="margin-left-block"></div>
-            <div class="main-content-block">
-                <h1>Implications and limitations</h1>
+                <h1 style="font-size: 32px">Conclusions and Limitations</h1>
+                <hr style="border-top: 1px solid #cccccc" />
                 Let's end with some discussion of the implications and
                 limitations.
             </div>
-            <div class="margin-right-block"></div>
+            <div class="margin-right-block">
+                Margin note that clarifies some detail #main-content-block for
+                intro section.
+            </div>
         </div>
 
         <div class="content-margin-container" id="citations">
@@ -409,11 +402,28 @@
                     <br />
                     <span style="font-size: 16px">References:</span><br /><br />
                     <a id="ref_1"></a>[1]
-                    <a href="https://en.wikipedia.org/wiki/Allegory_of_the_cave"
-                        >Allegory of the Cave</a
-                    >, Plato, c. 375 BC<br /><br />
-                    <a id="ref_2"></a>[2] <a href="">A Human-Level AGI</a>,
-                    OpenAI, 2025<br /><br />
+                    <a href="https://arxiv.org/abs/2407.21783"
+                        >The Llama 3 Herd of Models</a
+                    >, Meta, 2024<br /><br />
+                    <a id="ref_2"></a>[2]
+                    <a href="https://arxiv.org/abs/1911.07676"
+                        >Learning with Good Feature Representations...</a
+                    >, Lattimore and Szepesvári, 2020, for example<br /><br />
+
+                    <a id="ref_3"></a>[3]
+                    <a href="https://arxiv.org/abs/1905.01435"
+                        >Tight Regret Bounds for Infinite...</a
+                    >, Li et al., 2021<br /><br />
+
+                    <a id="ref_4"></a>[4]
+                    <a href="https://arxiv.org/abs/2305.10429"
+                        >DoReMi: Optimizing Data Mixtures Speeds Up Language
+                        Model Pretraining</a
+                    >, Xie et al., 2023<br /><br />
+                    <a id="ref_5"></a>[5]
+                    <a href="https://arxiv.org/abs/2307.14430"
+                        >Skill-it! A Data-Driven Skills Framework for...</a
+                    >, Chen et al., 2023<br /><br />
                 </div>
             </div>
             <div class="margin-right-block">
