@@ -258,17 +258,23 @@
                 >
                     <b style="font-size: 16px">Outline</b><br /><br />
                     <a href="#intro">Introduction</a><br /><br />
-                    <a href="#does_x_do_y">Does X do Y?</a><br /><br />
-                    <a href="#implications_and_limitations"
-                        >Implications and limitations</a
+                    <a href="#bg">Background and Literature</a><br /><br />
+                    <a href="#methods"
+                        >Methodology</a
+                    ><br /><br />
+                    <a href="#analysis"
+                        >Analysis and Results</a
+                    ><br /><br />
+                    <a href="#limitations"
+                        >Limitations and Future Directions</a
                     ><br /><br />
                 </div>
             </div>
             <div class="main-content-block">
                 <!--You can embed an image like this:-->
-                <img src="./images/your_image_here.png" width="512px" />
+                <!-- <img src="./images/your_image_here.png" width="512px" /> -->
             </div>
-            <div class="margin-right-block">Caption for the image.</div>
+            <!-- <div class="margin-right-block">Caption for the image.</div> -->
         </div>
 
         <div class="content-margin-container" id="intro">
@@ -315,12 +321,12 @@
                 potentially reveal new principles governing data mixture
                 optimization. <br /><br />
             </div>
-            <div class="margin-right-block">
+            <!-- <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
                 intro section.
-            </div>
+            </div> -->
         </div>
-        <div class="content-margin-container" id="intro">
+        <div class="content-margin-container" id="bg">
             <div class="margin-left-block"></div>
             <div class="main-content-block">
                 <h1 style="font-size: 32px">Background and Literature</h1>
@@ -389,12 +395,12 @@
                 may not generalize well to domains where skill relationships are
                 less clear.<br /><br />
             </div>
-            <div class="margin-right-block">
+            <!-- <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
                 intro section.
-            </div>
+            </div> -->
         </div>
-        <div class="content-margin-container" id="intro">
+        <div class="content-margin-container" id="methods">
             <div class="margin-left-block"></div>
             <div class="main-content-block">
                 <h1 style="font-size: 32px">Methodology</h1>
@@ -461,24 +467,39 @@ To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted th
             </div>
         </div>
 
-        <div class="content-margin-container" id="intro">
+        <div class="content-margin-container" id="analysis">
             <div class="margin-left-block"></div>
             <div class="main-content-block">
                 <h1 style="font-size: 32px">Analysis and Results</h1>
                 <hr style="border-top: 1px solid #cccccc" />
-                First, we tested different reweighting policies with alpha values 0.1 and -0.1. The resulting loss curves were as follows:
-                <img src="./images/your_image_here.png" width="512px" />
+                First, we tested different reweighting policies with $\alpha$ values of 0.1 and -0.1. The resulting loss curves were as follows:
+                <img src="./images/lossalpha0.1.png"/>
+                As we can see, there is not a significant difference between the curves – we attribute these fluctuations to noise occurring during the random sampling. We also visualize the underlying weights for one of these policies (all policies looked very similar/practically identical).
+                <img src="./images/weightchange.png"/>
+                Thus, in these cases the reweighting policy and loss curve form a feedback loop – because the loss curves for each domain evolve very similarly, the weights for each domain also change near-identically. Then, the model continues to sample equally from each domain and the loss curves change in the same way.<br><br>
+                Motivated by this, we tried larger values of $\alpha$ (1, 10, 100) to make the difference between domains more pronounced and have the model do something different than just continuing to sample uniformly randomly. The resulting loss curve is as follows – we present only $\alpha$ = 1 because larger values of alpha only magnified our following results.
+                <img src="./images/lossalpha1.png"/>
+                <p>Again, there are no appreciable results. When looking at the weight change plots, the policies that consider average loss behave the same as before – all domains scale up equally in lockstep. For the policies considering <em>change</em> in loss (both upsampling and downsampling), however, we observe a more interesting phenomenon:</p>
+                <img src="./images/weightupdates_best_withoutlier.png"/>
+                <img src="./images/weightupdates_new_nooutlier.png"/>
+                <p>
+                    Here, one domain gets weighted down significantly while the other domain weights start to have more meaningful adjustments. We suspect that the downweighting of one domain occurs when it simply gets unlucky – the change in loss is maximally adversarial and makes it decrease the most out of all domains, which then causes it to be sampled less, <em>leaving the last two loss values in the window unchanged</em> – another runaway effect is observed. For the other domains, we see some changes that are at a larger scale than before – some of the domains have a definitive trend upwards. However, these results are not consistent across policies/differing values of alpha. See the following plot:
+                </p>
+
+                Here, the domains are essentially in a random order compared to before. Thus, we conclude that the evolution of these domain weights is largely the accumulation of noise, just on a higher scale than in previous runs.<br><br>
+
+                The last thing we tested was initializing the domain weights to be non-uniform, by making one of them slightly higher than the others. This simply induced another similar runaway effect, where the domain whose weight was initially increased started growing much faster than the other weights and ended up being the only domain sampled.
             </div>
-            <div class="margin-right-block">
+            <!-- <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
                 intro section.
-            </div>
+            </div> -->
         </div>
 
-        <div class="content-margin-container" id="intro">
+        <div class="content-margin-container" id="limitations">
             <div class="margin-left-block"></div>
             <div class="main-content-block">
-                <h1 style="font-size: 32px">Conclusions and Limitations</h1>
+                <h1 style="font-size: 32px">Limitations and Future Directions</h1>
                 <hr style="border-top: 1px solid #cccccc" />
                 <p>
                     Although our method did not produce significant results on
@@ -507,8 +528,8 @@ To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted th
                 <p>Question: Solve for x: 2x + 3 = 11</p>
                 <p>
                     Generated Answer:
-                    $$$fracfracrightfracfracright$\$\$sqrt$$\$\\$\$$\$\$\$\$\$\$$$$\$\$$$\\$$\$\,3$right$\\left{${3$\{$\$$$$\right{right+{{right{{{2\{22+{1{2{22{2\{right3right\22}2end2$2{$right\$end$\right{end$\2{\+\3{{\3right\{\{\\{{\{{-\2right13right34{\{right$2{,\2right\1\\{0\{{{\end{2,2}{1right{$&\\11right\2{{&{end{end{}\2\\{end$end$endright22{\{end{\\
-                    \end\rightrightend02\2left32{\\endright\\\right{\{\\{\\end\\\4rightend\\right\\\\{2\\2\2end22\end2\rightright22{\2endend\\\22{\2end5\end2{1\{\\{\right2{2\\\{\\{2,2{\{4\15\{end\\\\\}\\\\5\{\&\{\3\\{\5&24\{\4{2\\{\3\0\&\\\1\\2\\\5\\{\\352\\\\3\\\\{\\\\6\\\\2\\2rightend5\{\\,26\\\2\5\\\\\4\2\2\\\5\\\2\5}2\\\\\2{{{&^\62\\{\end5002{12{&2\22222{5,end65\\\,52155{122562\
+                    <pre class="no-mathjax">$$$fracfracrightfracfracright$\$\$sqrt$$\$\\$\$$\$\$\$\$\$\$$$$\$\$$$\\$$\$\,3$right$\\left{${3$\{$\$$$$\right{right+{{right{{{2\{22+{1{2{22{2\{right3right\22}2end2$2{$right\$end$\right{end$\2{\+\3{{\3right\{\{\\{{\{{-\2right13right34{\{right$2{,\2right\1\\{0\{{{\end{2,2}{1right{$&\\11right\2{{&{end{end{}\2\\{end$end$endright22{\{end{\\
+                    \end\rightrightend02\2left32{\\endright\\\right{\{\\{\\end\\\4rightend\\right\\\\{2\\2\2end22\end2\rightright22{\2endend\\\22{\2end5\end2{1\{\\{\right2{2\\\{\\{2,2{\{4\15\{end\\\\\}\\\\5\{\&\{\3\\{\5&24\{\4{2\\{\3\0\&\\\1\\2\\\5\\{\\352\\\\3\\\\{\\\\6\\\\2\\2rightend5\{\\,26\\\2\5\\\\\4\2\2\\\5\\\2\5}2\\\\\2{{{&^\62\\{\end5002{12{&2\22222{5,end65\\\,52155{122562\</pre>
                 </p>
                 <p>
                     From this, we can see that the model is only really learning
@@ -530,17 +551,17 @@ To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted th
                 <p>
                     Our experiments also proved that the scale of the weight
                     updates is also a crucial aspect of the reweighting policy –
-                    in our results, we clearly found that an alpha of 0.1 vs 1
+                    in our results, we clearly found that an $\alpha$ of 0.1 vs 1
                     crossed some boundary that induced different behavior. With
                     more compute available, we would do a more fine-grained
-                    search on alpha and find the most significant value(s)
+                    search on $\alpha$ and find the most significant value(s)
                     within this interval. Furthermore, this scale is likely
                     specific to our task – in a different training/finetuning
                     environment with a different loss scale and different
-                    domains, the exact value of alpha that is optimal for weight
+                    domains, the exact value of $\alpha$ that is optimal for weight
                     updates would likely be very different. One possible
                     approach to finding this value would be to develop a proxy
-                    model that is able to adjust alpha as training evolves –
+                    model that is able to adjust $\alpha$ as training evolves –
                     this could be some simple meta-learning approach or as
                     complicated as a mini neural network.
                 </p>
@@ -559,10 +580,10 @@ To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted th
                     adaptive curriculum learning.
                 </p>
             </div>
-            <div class="margin-right-block">
+            <!-- <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
                 intro section.
-            </div>
+            </div> -->
         </div>
 
         <div class="content-margin-container" id="citations">
