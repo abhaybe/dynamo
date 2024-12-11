@@ -194,6 +194,25 @@
                 width: 50px; /* Optional: Adds space between the div and the paragraph */
             }
         </style>
+        <style type="text/css">
+            /* Existing styles remain the same */
+            
+            pre.no-mathjax {
+                white-space: pre-wrap;       /* CSS3 */
+                white-space: -moz-pre-wrap;  /* Firefox */
+                white-space: -pre-wrap;      /* Opera <7 */
+                white-space: -o-pre-wrap;    /* Opera 7 */
+                word-wrap: break-word;       /* IE & Chrome */
+                max-width: 100%;
+                background-color: #f5f5f5;
+                padding: 15px;
+                border-radius: 4px;
+                font-family: monospace;
+                overflow-x: auto;
+                line-height: 1.4;
+                margin: 10px 0;
+            }
+        </style>
 
         <title>DynaMO</title>
         <meta property="og:title" content="Dynamo" />
@@ -266,7 +285,7 @@
                         >Analysis and Results</a
                     ><br /><br />
                     <a href="#limitations"
-                        >Limitations and Future Directions</a
+                        >Limitations and Future Work</a
                     ><br /><br />
                 </div>
             </div>
@@ -431,7 +450,7 @@
                 this dataset because it provided distinct domains that would
                 require different skills/knowledge, but with some amount of
                 transfer between domains (e.g. proficiency in algebra may be
-                helpful in linear algebra). For our model, we use Meta’s LLama
+                helpful in linear algebra). Each finetuning run samples 20,000 examples from this dataset. For our model, we use Meta’s LLama
                 3.2 1B<a href="#ref_7">[7]</a>. The small size of this model
                 makes it easy and effective to finetune cost-wise, while the
                 advanced training and finetuning done on this model ensures that
@@ -463,7 +482,7 @@ To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted th
 
 <p>Fundamentally, all of our reweighting policies have the following structure:</p>
 
-<p>\[w_i = w_i + \alpha \cdot \text{loss}_{\text{signal}}\]</p>
+<p>\[w_i = w_i + \alpha \cdot \text{loss_signal}\]</p>
 
 <p>For our delta policy, our loss signal is the <em>most recent</em> change in domain loss, or \(L_{-1} - L_{-2}\). For our average policy, our loss signal is the average of the last 100 domain losses. We linearly scale this loss signal by a weight \(\alpha\), which can be positive or negative.</p>
 
@@ -479,10 +498,10 @@ To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted th
 <p>The figure presents a visual breakdown of our algorithm.</p>
 </div>
 
-<div class="margin-right-block">
+<!-- <div class="margin-right-block">
     Margin note that clarifies some detail #main-content-block for
     intro section.
-</div>
+</div> -->
 </div>
 
 <div class="content-margin-container" id="intro">
@@ -490,10 +509,10 @@ To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted th
     <div class="main-content-block">
         <img src="./images/Step N (Weight update step).png" width="800px" />
     </div>
-    <div class="margin-right-block">
+    <!-- <div class="margin-right-block">
         Margin note that clarifies some detail #main-content-block for
         intro section.
-    </div>
+    </div> -->
 </div>
 
 
@@ -511,10 +530,10 @@ To summarize, we perform the following experiments:
 </ol>
 The details and results of these experiments are expanded upon in the Analysis and Results section.
             </div>
-            <div class="margin-right-block">
+            <!-- <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
                 intro section.
-            </div>
+            </div> -->
         </div>
 
         <div class="content-margin-container" id="analysis">
@@ -535,6 +554,7 @@ The details and results of these experiments are expanded upon in the Analysis a
                 <p>
                     Here, one domain gets weighted down significantly while the other domain weights start to have more meaningful adjustments. We suspect that the downweighting of one domain occurs when it simply gets unlucky – the change in loss is maximally adversarial and makes it decrease the most out of all domains, which then causes it to be sampled less, <em>leaving the last two loss values in the window unchanged</em> – another runaway effect is observed. For the other domains, we see some changes that are at a larger scale than before – some of the domains have a definitive trend upwards. However, these results are not consistent across policies/differing values of alpha. See the following plot:
                 </p>
+                <img src="./images/weightupdates2.png"/>
 
                 Here, the domains are essentially in a random order compared to before. Thus, we conclude that the evolution of these domain weights is largely the accumulation of noise, just on a higher scale than in previous runs.<br><br>
 
@@ -549,13 +569,11 @@ The details and results of these experiments are expanded upon in the Analysis a
         <div class="content-margin-container" id="limitations">
             <div class="margin-left-block"></div>
             <div class="main-content-block">
-                <h1 style="font-size: 32px">Limitations and Future Directions</h1>
+                <h1 style="font-size: 32px">Limitations and Future Work</h1>
                 <hr style="border-top: 1px solid #cccccc" />
                 <p>
-                    Although our method did not produce significant results on
-                    the model and datasets we experimented with, we have gained
-                    a much better understanding of the problem and suggest many
-                    promising future directions.
+                    Overall, we experimented with DynaMO, a new framework to dynamically reweight data domains integrated in the training loop. Although the methods that we experimented with did not produce appreciable changes in performance on
+                    the model and datasets we experimented with, this project has given us a much better understanding of the problem. We believe that DynaMO still shows promise, as removing much of the limitations we had in this project may result in more promising future research directions.
                 </p>
                 <p>
                     Firstly, we chose to finetune on subsets of a specific
