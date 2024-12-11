@@ -270,11 +270,7 @@
                     ><br /><br />
                 </div>
             </div>
-            <div class="main-content-block">
-                <!--You can embed an image like this:-->
-                <!-- <img src="./images/your_image_here.png" width="512px" /> -->
-            </div>
-            <!-- <div class="margin-right-block">Caption for the image.</div> -->
+            
         </div>
 
         <div class="content-margin-container" id="intro">
@@ -442,7 +438,7 @@
                 our model is a strong baseline while still having room for
                 improvement due to the limitations of its smaller size.
 
-                <h2 style="font-size: 24px">Methodology</h1>
+                <h2 style="font-size: 24px">Algorithm</h1>
 <p>
 Suppose our dataset contains $N$ domains, where each domain is represented by a dataset $D_i$. Our method introduces a new set of parameters into the training process – these are <em>domain weights</em> $w_1$ to $w_N$, used to select the specific domain whose dataset we sample a datapoint from (specifically, weight $w_i$ directly influences the chance that $D_i$ is selected).
 </p>
@@ -452,14 +448,68 @@ DynaMO adjusts these domain weights during the training process – specifically
 </p>
 
 <ul>
-<li>Baseline policy – Uniform random sampling, where $w_i = 1$ (the reweighting policy is the identity function). In other words, the domain weights do not change.</li>
-<li>Delta policy- We use the change in loss to update weights. The reasoning is explored in the next section.</li>
-<li>Average policy – $L_{i, \text{avg}}$, the average of the previous 100 values of loss, is used to update weights. We explore this in more detail under Experiment 1.</li>
+<li><b>Baseline policy</b>: Uniform random sampling, where $w_i = 1$ (the reweighting policy is the identity function). In other words, the domain weights do not change.</li>
+<li><b>Delta policy</b>: We use the change in loss to update weights. The reasoning is explored in the next section.</li>
+<li><b>Average policy </b>: $L_{i, \text{avg}}$, the average of the previous 100 values of loss, is used to update weights. We explore this in more detail under Experiment 1.</li>
 </ul>
 
 <p>
 To allow dynamic reweighting <em>during</em> finetuning/training, we adjusted the data loading process. Normally, domain weights would be used to subsample from a larger dataset and be passed in as a fixed dataset into the training process – because the nature of our method requires the sampling step to be done during training, we modify PyTorch's Dataset class as needed. The weights are stored internally to this class, and every time <strong>getitem</strong> is called on this custom Dataset class, a domain is sampled using these weights and a datapoint is sampled from that domain. This custom dataset also tracks losses across the domains – each domain maintains a length-100 sliding window that can be used to determine how the loss has evolved in the recent pass. Finally, each dataset instance also has its own <em>weight update policy</em> function, called every $T$ training steps, that describes how to update the domain weights based on the current weights and the loss windows for each domain.
 </p>
+
+<h2 style="font-size: 24px">The Weight Update Strategy</h2>
+
+<p>The main idea behind our reweighting policies is to use the domain losses, collected dynamically at training time, as signals for how to adjust the mixture weights. Our hypothesis is that if we look at how the losses evolve for different domains, we get more information about which domains are learning best from the data, which will affect the domains that get upsampled or downsampled.</p>
+
+<p>Fundamentally, all of our reweighting policies have the following structure:</p>
+
+<p>\[w_i = w_i + \alpha \cdot \text{loss}_{\text{signal}}\]</p>
+
+<p>For our delta policy, our loss signal is the <em>most recent</em> change in domain loss, or \(L_{-1} - L_{-2}\). For our average policy, our loss signal is the average of the last 100 domain losses. We linearly scale this loss signal by a weight \(\alpha\), which can be positive or negative.</p>
+
+<p>We experiment with different <em>scales</em> of \(\alpha\), as well as different <em>signs</em> of \(\alpha\). Different scales of \(\alpha\) are because the loss curves can be at different scales – a large level of \(\alpha\) will magnify the difference between domains to be meaningful, but if \(\alpha\) is <em>too</em> large this may lead to unstable training. Different signs of \(\alpha\) also capture different ways we can interpret our signals:</p>
+
+<ul>
+    <li>\(\Delta L_i\) is the most negative or \(L_{i,\text{avg}}\) is the lowest: The model is learning a lot from this domain, and we should upsample it (increase the weight) because it's providing the most useful information.</li>
+    <li>\(\Delta L_i\) is the most positive or \(L_{i,\text{avg}}\) is the highest: The model hasn't learned enough from this domain yet, and we should upsample it (decrease the weight) so we're able to avoid a knowledge deficiency in this subject.</li>
+</ul>
+
+<p>Going forward, for clarity, we simply summarize these combinations of loss signal and \(\alpha\) sign as "upsampling high/low average loss" or "upsampling least/most decreasing loss".</p>
+
+<p>The figure presents a visual breakdown of our algorithm.</p>
+</div>
+
+<div class="margin-right-block">
+    Margin note that clarifies some detail #main-content-block for
+    intro section.
+</div>
+</div>
+
+<div class="content-margin-container" id="intro">
+    <div class="margin-left-block"></div>
+    <div class="main-content-block">
+        <img src="./images/Step N (Weight update step).png" width="800px" />
+    </div>
+    <div class="margin-right-block">
+        Margin note that clarifies some detail #main-content-block for
+        intro section.
+    </div>
+</div>
+
+
+
+        <div class="content-margin-container" id="intro">
+            <div class="margin-left-block"></div>
+            <div class="main-content-block">
+                <h2 style="font-size: 24px">Experiments</h2>
+To summarize, we perform the following experiments:
+
+<ol>
+    <li>Two different weight update policies, using \(\Delta L_i\) and \(L_{i,\text{avg}}\). </li>
+    <li>Different values of \(\alpha\), over several orders of magnitude.</li>
+    <li>Negative and positive values of \(\alpha\).</li>
+</ol>
+The details and results of these experiments are expanded upon in the Analysis and Results section.
             </div>
             <div class="margin-right-block">
                 Margin note that clarifies some detail #main-content-block for
